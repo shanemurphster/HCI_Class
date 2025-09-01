@@ -1,0 +1,132 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="styles.css">
+  <title>Phone Prototype</title>
+</head>
+<body>
+  <div class="phone">
+    <header class="topbar">
+      <div class="brand">
+        <img src="assets/path-at-penn.png" alt="logo">
+      </div>
+      <div class="logout">Log<br>Out</div>
+    </header>
+
+    <div class="session">
+      <div class="cart">Cart</div>
+      <div class="select"> <button style="background:#8a2b2b;color:#fff;border:2px solid #000;padding:6px 12px;font-weight:700">Primary &nbsp;&gt;</button></div>
+      <div class="term">Fall 2025</div>
+    </div>
+
+    <div class="chips">
+      <div class="chip stat"><div class="dot"></div>Stat 4300</div>
+      <div class="chip cis4120"><div class="dot"></div>CIS 4120</div>
+      <div class="chip ese3040"><div class="dot"></div>ESE 3040</div>
+      <div class="chip lawm5060"><div class="dot"></div>LAWM 5060</div>
+      <div class="chip cis1210"><div class="dot"></div>CIS 1210</div>
+    </div>
+
+    <!-- removed decorative day circles -->
+
+    <div class="calendar-wrap">
+    <section class="calendar">
+      <!-- column headers -->
+      <div class="day-header"></div>
+      <div class="day-header">Mon</div>
+      <div class="day-header">Tue</div>
+      <div class="day-header">Wed</div>
+      <div class="day-header">Thu</div>
+      <div class="day-header">Fri</div>
+
+      <!-- times + cells: each row must have 1 time-label + 5 cells -->
+      <!-- 8am -->
+      <div class="time-label">8am</div>
+      <div class="cell"><div class="event cis4120">CIS 4120 101<br>Lecture</div></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"><div class="event cis1210">CIS 1210 001<br>Tutorial</div></div>
+      <div class="cell"></div>
+
+      <!-- 9am -->
+      <div class="time-label">9am</div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+
+      <!-- 10am -->
+      <div class="time-label">10am</div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+
+      <!-- 11am -->
+      <div class="time-label">11am</div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"><div class="event stat">✔ STAT 4300 002<br>Probability</div></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+
+      <!-- 12pm -->
+      <div class="time-label">12pm</div>
+      <div class="cell"></div>
+      <div class="cell"><div class="event cis1210">✔ CIS 1210 001<br>Programming Language</div></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"><div class="event lawm5060">LAWM 5060 302<br>Technology Law</div></div>
+
+      <!-- 1pm -->
+      <div class="time-label">1pm</div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"><div class="event cis4120">CIS 4120 401<br>Discussion</div></div>
+
+      <!-- 2pm -->
+      <div class="time-label">2pm</div>
+      <div class="cell"></div>
+      <div class="cell"><div class="event cis4120">CIS 4120 401<br>Intro to Human C</div></div>
+      <div class="cell"></div>
+      <div class="cell"><div class="event cis4120">CIS 4120 401<br>Intro to Human C</div></div>
+      <div class="cell"><div class="event ese3040">ESE 3040 001<br>Introduction to Optimizat</div></div>
+
+      <!-- 3pm -->
+      <div class="time-label">3pm</div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+
+      <!-- 4pm -->
+      <div class="time-label">4pm</div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+
+      <!-- 5pm -->
+      <div class="time-label">5pm</div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+    </section>
+
+    <div class="buttons">
+      <button class="button">Search For Classes <span>&lt;</span></button>
+      <button class="button">Register Cart <span>&lt;</span></button>
+    </div>
+  </div>
+</body>
+</html>

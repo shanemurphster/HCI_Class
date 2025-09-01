@@ -1,0 +1,56 @@
+/* Phone prototype styles */
+:root{
+  /* UPenn colors */
+  --nav-blue:#011a57; /* Penn navy */
+  --accent-maroon:#990000; /* Penn red */
+  --light-blue:#cfe3f8;
+  --white:#ffffff;
+  --muted:#f7f7f7;
+  /* course colors */
+  --stat-color:#2b6fb3;
+  --cis4120-color:#4aa3a3;
+  --ese3040-color:#8c6fb3;
+  --lawm5060-color:#4caf50;
+  --cis1210-color:#d9822b;
+}
+*{box-sizing:border-box;font-family: Arial, Helvetica, sans-serif}
+.body-hidden-x{overflow-x:hidden}
+body{background:var(--muted);display:flex;justify-content:center;padding:16px;overflow-x:hidden}
+.phone{width:440px;max-width:96vw;background:#fff;border:1px solid #ccc;box-shadow:0 4px 10px rgba(0,0,0,0.1)}
+.topbar{background:var(--nav-blue);color:var(--white);display:flex;align-items:center;justify-content:space-between;padding:12px 16px}
+.brand{display:flex;align-items:center;gap:12px}
+.brand img{height:40px}
+.title-large{display:none}
+.session{padding:12px 16px;background:var(--accent-maroon);color:var(--white);display:flex;align-items:center;justify-content:space-between}
+.session .cart{font-size:28px;font-weight:700}
+.term{font-size:20px}
+.chips{display:flex;gap:6px;padding:6px 10px;background:#e9eef7;align-items:center;flex-wrap:nowrap;overflow-x:hidden}
+.chip{display:inline-flex;align-items:center;gap:8px;background:#fff;padding:4px 8px;border-radius:4px;font-weight:700;border:1px solid rgba(0,0,0,0.06);font-size:12px;white-space:nowrap;flex:1 1 0;min-width:0;max-width:140px;overflow:hidden;text-overflow:ellipsis}
+.chip .dot{width:14px;height:14px;border-radius:7px;flex:0 0 14px}
+.chip.stat .dot{background:var(--stat-color)}
+.chip.cis4120 .dot{background:var(--cis4120-color)}
+.chip.ese3040 .dot{background:var(--ese3040-color)}
+.chip.lawm5060 .dot{background:var(--lawm5060-color)}
+.chip.cis1210 .dot{background:var(--cis1210-color)}
+.days{display:none}
+.calendar-wrap{overflow:hidden}
+.calendar{border-top:1px solid #ddd;border-left:1px solid #ddd;width:100%}
+.calendar{display:grid;grid-template-columns:52px repeat(5,1fr);grid-auto-rows:36px}
+.calendar .day-header{background:transparent;padding:4px 6px;border-right:1px solid #eee;border-bottom:1px solid #eee;font-weight:700;text-align:center;font-size:12px}
+.calendar .time-label{padding:6px 6px;border-right:1px solid #eee;border-bottom:1px solid #eee;font-size:11px;color:#666;text-align:left}
+.calendar .time-label{position:sticky;left:0;background:#fff;z-index:2}
+.calendar .cell{padding:4px;border-right:1px solid #eee;border-bottom:1px solid #eee;position:relative}
+.event{border-radius:6px}
+.chip{border-radius:6px}
+.button{border-radius:8px}
+.event{background:#e8f2ff;border-left:6px solid var(--stat-color);padding:4px 6px;font-size:11px;border-radius:2px;max-width:95%}
+.event.stat{border-left-color:var(--stat-color);background:#e6f0fb}
+.event.cis4120{border-left-color:var(--cis4120-color);background:#eaf6f6}
+.event.ese3040{border-left-color:var(--ese3040-color);background:#f0eaf7}
+.event.lawm5060{border-left-color:var(--lawm5060-color);background:#eaf7ea}
+.event.cis1210{border-left-color:var(--cis1210-color);background:#fff3e8}
+.buttons{display:flex;flex-direction:column;gap:12px;padding:16px}
+.button{background:var(--nav-blue);color:var(--white);padding:14px;border-radius:4px;font-weight:700;border:none;display:flex;justify-content:space-between;align-items:center}
+.button.small{padding:12px}
+
+
