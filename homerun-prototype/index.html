@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Homerun • Athlete Social Prototype</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="inner">
+        <div class="brand">
+          <div class="logo" aria-hidden="true"></div>
+          <div class="brand-name">Homerun</div>
+        </div>
+        <nav class="primary-nav" aria-label="Primary">
+          <a href="messages.html">Messages</a>
+          <a href="cupid.html">Cupid</a>
+          <a href="events.html">Events</a>
+          <a href="locker.html">Locker</a>
+          <a href="reels.html">Reels</a>
+        </nav>
+        <div class="header-actions">
+          <button class="btn btn-secondary" onclick="location.href='events.html'">New Event</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="section-header">
+        <h1>Welcome</h1>
+        <div class="row">
+          <span class="chip">Penn Blue</span>
+          <span class="chip">Penn Red</span>
+          <span class="chip success">Live prototype</span>
+        </div>
+      </div>
+      <div class="grid cols-2">
+        <a class="card" href="messages.html">
+          <h2>Messages & Team Structure</h2>
+          <p class="muted">DMs, team chats, and Captain\'s Corner. Try sending a message and viewing roster + join requests.</p>
+        </a>
+        <a class="card" href="cupid.html">
+          <h2>Cupid & Locker Crush</h2>
+          <p class="muted">Swipe matches, set message permissions, and send an anonymous Locker Crush.</p>
+        </a>
+        <a class="card" href="events.html">
+          <h2>Events & Away Status</h2>
+          <p class="muted">Filter and RSVP to events. Captains can toggle Team Away and see the banner update.</p>
+        </a>
+        <a class="card" href="locker.html">
+          <h2>Locker Room</h2>
+          <p class="muted">Customize theme, photos, stickers, and schedule with privacy toggles.</p>
+        </a>
+        <a class="card" href="reels.html">
+          <h2>Highlight Reels</h2>
+          <p class="muted">Play clips, like, comment, and filter by My Teams / Trending / Recent.</p>
+        </a>
+      </div>
+    </main>
+
+    <script src="js/app.js"></script>
+    <script src="js/mock-data.js"></script>
+  </body>
+</html>
+
+

@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Messages • Homerun</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="inner">
+        <div class="brand" onclick="location.href='index.html'" style="cursor:pointer">
+          <div class="logo" aria-hidden="true"></div>
+          <div class="brand-name">Homerun</div>
+        </div>
+        <nav class="primary-nav" aria-label="Primary">
+          <a href="messages.html">Messages</a>
+          <a href="cupid.html">Cupid</a>
+          <a href="events.html">Events</a>
+          <a href="locker.html">Locker</a>
+          <a href="reels.html">Reels</a>
+        </nav>
+        <div class="header-actions"></div>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="section-header">
+        <h1>Messages</h1>
+        <div class="row">
+          <div class="segmented" id="conv-tabs">
+            <button data-tab="all" class="active">All</button>
+            <button data-tab="dm">DMs</button>
+            <button data-tab="team">Teams</button>
+            <button data-tab="captain">Captains</button>
+          </div>
+          <div class="field" style="min-width:240px">
+            <input id="search" class="input" placeholder="Search" />
+          </div>
+        </div>
+      </div>
+
+      <div class="three-col">
+        <aside class="card">
+          <div id="conv-list" class="list"></div>
+        </aside>
+
+        <section class="card" id="chat-section">
+          <div id="chat-header" class="section-header">
+            <h2 id="chat-title">Select a conversation</h2>
+            <span id="chat-meta" class="muted"></span>
+          </div>
+          <div id="chat-thread" class="chat-thread" aria-live="polite">
+            <div class="empty">Start a new conversation</div>
+          </div>
+          <div class="compose">
+            <input id="compose-input" class="input" placeholder="Write a message" />
+            <button id="send-btn" class="btn btn-accent">Send</button>
+          </div>
+        </section>
+
+        <aside class="side-panel">
+          <div class="card" id="roster">
+            <h3>Roster</h3>
+            <div id="roster-list" class="list"></div>
+          </div>
+          <div class="card" id="join-requests" style="display:none">
+            <div class="section-header"><h3>Join requests</h3><span class="chip warn" id="jr-count">0</span></div>
+            <div id="jr-list" class="list"></div>
+          </div>
+        </aside>
+      </div>
+    </main>
+
+    <script src="js/app.js"></script>
+    <script src="js/mock-data.js"></script>
+    <script>
+      const { $, $$, showToast, formatTime, isCaptain, storage } = window.Homerun;
+      let activeConvId = storage.ensure('activeConvId', 'c2');
+
+      function initial() {
+        renderList();
+        selectConversation(activeConvId);
+        $$('#conv-tabs button').forEach(b=> b.addEventListener('click', ()=>{
+          $$('#conv-tabs button').forEach(x=>x.classList.remove('active'));
+          b.classList.add('active');
+          renderList();
+        }));
+        $('#search').addEventListener('input', renderList);
+        $('#send-btn').addEventListener('click', sendMessage);
+        $('#compose-input').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); sendMessage(); } });
+        document.addEventListener('role:changed', ()=>{ renderRightRail(); renderList(); });
+      }
+
+      function filteredConversations() {
+        const tab = $$('#conv-tabs button').find(b=>b.classList.contains('active'))?.dataset.tab || 'all';
+        const term = ($('#search').value||'').toLowerCase();
+        let list = MockData.conversations;
+        if (tab !== 'all') list = list.filter(c => c.type === tab);
+        if (term) list = list.filter(c => (c.title||'').toLowerCase().includes(term));
+        return list;
+      }
+
+      function renderList() {
+        const wrap = $('#conv-list');
+        wrap.innerHTML = '';
+        const list = filteredConversations();
+        if (!list.length) { wrap.innerHTML = '<div class="empty">No conversations</div>'; return; }
+        list.forEach(c => {
+          const item = document.createElement('div');
+          item.className = 'list-item';
+          item.setAttribute('role','button');
+          item.addEventListener('click', ()=> selectConversation(c.id));
+          const initials = (c.title||'?').split(' ').map(s=>s[0]).slice(0,2).join('').toUpperCase();
+          item.innerHTML = `
+            <div class="avatar">${initials}</div>
+            <div class="meta">
+              <div class="title">${c.title}</div>
+              <div class="sub">${c.type==='dm'?'Direct Message':c.type==='team'?'Team':'Captain\'s Corner'}</div>
+            </div>
+            <span class="badge chip ${activeConvId===c.id?'badge':''}">${(c.messages||[]).length}</span>
+          `;
+          wrap.appendChild(item);
+        });
+      }
+
+      function selectConversation(id) {
+        activeConvId = id;
+        storage.set('activeConvId', id);
+        const c = MockData.conversations.find(x=>x.id===id);
+        if (!c) return;
+        $('#chat-title').textContent = c.title;
+        $('#chat-meta').textContent = c.type==='dm'?'DM':'Team chat';
+        renderThread(c);
+        renderRightRail(c);
+        renderList();
+      }
+
+      function renderThread(c) {
+        const wrap = $('#chat-thread');
+        wrap.innerHTML = '';
+        const msgs = c.messages || [];
+        if (!msgs.length) { wrap.innerHTML = '<div class="empty">Start a new conversation</div>'; return; }
+        msgs.forEach(m => {
+          const me = m.from === 'u1';
+          const div = document.createElement('div');
+          div.className = 'bubble'+(me?' me':'');
+          div.innerHTML = `${m.text}<span class="time">${formatTime(m.at)}${me?' • ✓✓':''}</span>`;
+          wrap.appendChild(div);
+        });
+        wrap.scrollTop = wrap.scrollHeight;
+      }
+
+      function renderRightRail(c = MockData.conversations.find(x=>x.id===activeConvId)) {
+        const rosterList = $('#roster-list');
+        rosterList.innerHTML = '';
+        if (c.type === 'dm') {
+          rosterList.innerHTML = '<div class="empty">No roster for DMs</div>';
+          $('#join-requests').style.display = 'none';
+          return;
+        }
+        const members = MockData.users.filter(u=> (c.participants||[]).includes(u.id));
+        members.forEach(u=>{
+          const li = document.createElement('div');
+          li.className='list-item';
+          const initials = u.name.split(' ').map(s=>s[0]).slice(0,2).join('').toUpperCase();
+          li.innerHTML = `
+            <div class="avatar">${initials}</div>
+            <div class="meta">
+              <div class="title">${u.name}</div>
+              <div class="sub">${u.sport}</div>
+            </div>
+            <span class="chip role">${u.role}</span>
+          `;
+          rosterList.appendChild(li);
+        });
+
+        const jrCard = $('#join-requests');
+        if (c.type === 'team' && isCaptain()) {
+          // surface captain-specific join requests from captain room (c3)
+          const cc = MockData.conversations.find(x=>x.id==='c3');
+          const jrs = cc?.joinRequests || [];
+          $('#jr-count').textContent = jrs.length;
+          const jWrap = $('#jr-list');
+          jWrap.innerHTML = '';
+          jrs.forEach(req=>{
+            const row = document.createElement('div');
+            row.className = 'row';
+            row.innerHTML = `<div class="chip">${req.name} • ${req.sport}</div>`;
+            const actions = document.createElement('div');
+            const approve = document.createElement('button'); approve.className='btn btn-accent'; approve.textContent='Approve';
+            const deny = document.createElement('button'); deny.className='btn btn-danger'; deny.textContent='Deny';
+            approve.addEventListener('click', ()=>{ cc.joinRequests = cc.joinRequests.filter(x=>x.id!==req.id); storage.set('conversations', MockData.conversations); renderRightRail(c); showToast('Request approved'); });
+            deny.addEventListener('click', ()=>{ cc.joinRequests = cc.joinRequests.filter(x=>x.id!==req.id); storage.set('conversations', MockData.conversations); renderRightRail(c); showToast('Request denied'); });
+            actions.append(approve, deny);
+            row.appendChild(actions);
+            jWrap.appendChild(row);
+          });
+          jrCard.style.display = jrs.length? 'block':'none';
+        } else {
+          jrCard.style.display = 'none';
+        }
+      }
+
+      function sendMessage() {
+        const input = $('#compose-input');
+        const text = (input.value||'').trim();
+        if (!text) return;
+        const c = MockData.conversations.find(x=>x.id===activeConvId);
+        if (!c) return;
+        c.messages = c.messages || [];
+        c.messages.push({ from:'u1', text, at: new Date().toISOString() });
+        storage.set('conversations', MockData.conversations);
+        input.value='';
+        renderThread(c);
+        renderList();
+      }
+
+      document.addEventListener('DOMContentLoaded', initial);
+    </script>
+  </body>
+</html>
+
+

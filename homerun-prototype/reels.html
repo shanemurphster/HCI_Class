@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Reels • Homerun</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="inner">
+        <div class="brand" onclick="location.href='index.html'" style="cursor:pointer">
+          <div class="logo" aria-hidden="true"></div>
+          <div class="brand-name">Homerun</div>
+        </div>
+        <nav class="primary-nav" aria-label="Primary">
+          <a href="messages.html">Messages</a>
+          <a href="cupid.html">Cupid</a>
+          <a href="events.html">Events</a>
+          <a href="locker.html">Locker</a>
+          <a href="reels.html">Reels</a>
+        </nav>
+        <div class="header-actions"></div>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="section-header">
+        <h1>Highlight Reels</h1>
+        <div class="filter-bar">
+          <div class="segmented" id="reels-filter">
+            <button class="active" data-tab="teams">My Teams</button>
+            <button data-tab="trending">Trending</button>
+            <button data-tab="recent">Recent</button>
+          </div>
+          <button id="upload" class="btn btn-primary">Upload Stub</button>
+        </div>
+      </div>
+
+      <section class="reels-grid" id="reels"></section>
+      <div id="empty-reels" class="empty" style="display:none">No reels in this filter</div>
+    </main>
+
+    <div id="reel-modal" class="modal-backdrop">
+      <div class="modal">
+        <div class="modal-header">
+          <h3 id="reel-title"></h3>
+          <button class="btn btn-ghost" id="close-reel">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="row" style="justify-content:space-between">
+            <div id="reel-tags" class="row"></div>
+            <div class="row"><button id="like" class="btn btn-accent"></button></div>
+          </div>
+          <div id="reel-comments" class="list" style="margin-top:8px"></div>
+          <div class="row" style="margin-top:8px">
+            <input id="comment-input" class="input" placeholder="Add a comment" />
+            <button id="add-comment" class="btn btn-secondary">Comment</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script src="js/mock-data.js"></script>
+    <script>
+      const { $, $$, showToast, storage } = window.Homerun;
+      let activeId = null;
+      function filtered(){
+        const tab = $('#reels-filter .active').dataset.tab;
+        if (tab==='teams') return MockData.reels;
+        if (tab==='trending') return [...MockData.reels].sort((a,b)=>b.likes-a.likes);
+        return [...MockData.reels].reverse();
+      }
+      function render(){
+        const list = filtered();
+        const grid = $('#reels'); grid.innerHTML='';
+        if (!list.length){ $('#empty-reels').style.display='block'; return; } else { $('#empty-reels').style.display='none'; }
+        list.forEach(r=>{
+          const card = document.createElement('div'); card.className='reel-card';
+          const posterAttr = r.poster ? `poster="${r.poster}"` : '';
+          card.innerHTML = `
+            <video muted playsinline preload="metadata" ${posterAttr}></video>
+            <div class='overlay'></div>
+            <div class='meta'>
+              <div class='row'>${(r.tags||[]).map(t=>`<span class='chip'>${t}</span>`).join(' ')}</div>
+              <div class='row'>
+                <button class='btn btn-secondary' data-open='${r.id}'>${r.likes} Likes</button>
+              </div>
+            </div>`;
+          const v = card.querySelector('video');
+          if (r.videoSrc){ const s=document.createElement('source'); s.src=r.videoSrc; s.type='video/mp4'; v.appendChild(s); }
+          grid.appendChild(card);
+        });
+        $$('#reels [data-open]').forEach(b=> b.addEventListener('click', ()=> openReel(b.dataset.open)));
+        initAutoplay();
+      }
+      function initAutoplay(){
+        const container = $('#reels');
+        const videos = $$('#reels video');
+        const io = new IntersectionObserver((entries)=>{
+          entries.forEach(e=>{
+            if (e.isIntersecting && e.intersectionRatio > 0.75){ e.target.play().catch(()=>{}); }
+            else { e.target.pause(); e.target.currentTime = 0; }
+          });
+        }, { root: container, threshold: [0,0.25,0.5,0.75,1] });
+        videos.forEach(v=> io.observe(v));
+      }
+      function openReel(id){
+        const r = MockData.reels.find(x=>x.id===id); if (!r) return; activeId = id;
+        $('#reel-title').textContent = r.title;
+        $('#reel-tags').innerHTML = (r.tags||[]).map(t=>`<span class='chip'>${t}</span>`).join(' ');
+        $('#like').textContent = `❤ ${r.likes}`;
+        const wrap = $('#reel-comments'); wrap.innerHTML='';
+        (r.comments||[]).forEach(c=>{ const li=document.createElement('div'); li.className='row'; li.innerHTML = `<strong>${c.by}</strong>: ${c.text} <span class='muted' style='margin-left:auto'>2h</span>`; wrap.appendChild(li); });
+        $('#reel-modal').classList.add('show'); $('.modal-backdrop').classList.add('show');
+      }
+      function closeReel(){ $('#reel-modal').classList.remove('show'); $('.modal-backdrop').classList.remove('show'); }
+      function like(){ const r=MockData.reels.find(x=>x.id===activeId); if(!r) return; r.likes+=1; storage.set('reels', MockData.reels); $('#like').textContent=`❤ ${r.likes}`; render(); }
+      function addComment(){ const text=($('#comment-input').value||'').trim(); if(!text) return; const r=MockData.reels.find(x=>x.id===activeId); r.comments=r.comments||[]; r.comments.push({by:'Ava', text, at:new Date().toISOString()}); storage.set('reels', MockData.reels); $('#comment-input').value=''; openReel(activeId); showToast('Comment added'); }
+      function uploadStub(){ MockData.reels.unshift({ id:'r'+(Date.now()), title:'New upload', tags:['W Track'], likes:0, comments:[], videoSrc:'assets/video/placeholder.mp4', poster:'' }); storage.set('reels', MockData.reels); render(); showToast('Uploaded'); }
+      document.addEventListener('DOMContentLoaded', ()=>{ render(); $$('#reels-filter button').forEach(b=> b.addEventListener('click', ()=>{ b.parentElement.querySelectorAll('button').forEach(x=>x.classList.remove('active')); b.classList.add('active'); render(); })); $('#upload').addEventListener('click', uploadStub); $('#close-reel').addEventListener('click', closeReel); $('#like').addEventListener('click', like); $('#add-comment').addEventListener('click', addComment); });
+    </script>
+  </body>
+  </html>
+
+

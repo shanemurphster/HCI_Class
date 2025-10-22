@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cupid • Homerun</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="inner">
+        <div class="brand" onclick="location.href='index.html'" style="cursor:pointer">
+          <div class="logo" aria-hidden="true"></div>
+          <div class="brand-name">Homerun</div>
+        </div>
+        <nav class="primary-nav" aria-label="Primary">
+          <a href="messages.html">Messages</a>
+          <a href="cupid.html">Cupid</a>
+          <a href="events.html">Events</a>
+          <a href="locker.html">Locker</a>
+          <a href="reels.html">Reels</a>
+        </nav>
+        <div class="header-actions"></div>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="section-header">
+        <h1>Cupid</h1>
+        <div class="filter-bar">
+          <div class="segmented" id="filter-scope">
+            <button class="active" data-scope="all">All</button>
+            <button data-scope="teams">My Teams</button>
+          </div>
+          <select id="sport-filter" class="select" style="min-width:160px">
+            <option value="">Sport</option>
+            <option>W Track</option>
+            <option>Baseball</option>
+            <option>Field Hockey</option>
+            <option>M Soccer</option>
+            <option>W Rowing</option>
+          </select>
+          <select id="year-filter" class="select" style="min-width:160px">
+            <option value="">Class Year</option>
+            <option>'25</option>
+            <option>'26</option>
+            <option>'27</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid cols-2">
+        <section class="card" id="card-stack">
+          <h2 style="margin-bottom:8px">Swipe</h2>
+          <div id="cards" class="col"></div>
+          <div class="row" style="justify-content:center; gap:12px; margin-top:8px">
+            <button id="pass" class="btn">Pass</button>
+            <button id="info" class="btn btn-secondary">Info</button>
+            <button id="like" class="btn btn-accent">Like</button>
+          </div>
+          <div id="out-of-cards" class="empty" style="display:none">Out of cards. <a href="#" id="expand">Expand teams</a></div>
+        </section>
+
+        <aside class="card">
+          <h2>Locker Crush</h2>
+          <div class="field">
+            <label for="lc-message">Message</label>
+            <textarea id="lc-message" class="textarea" placeholder="Saw your 400m—electric. Coffee after practice?"></textarea>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <label class="row" style="gap:6px"><input type="checkbox" id="anon-toggle" checked /> Send anonymously</label>
+            <span id="anon-chip" class="chip">Anonymous Tiger #143</span>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <button id="send-crush" class="btn btn-primary">Send Crush</button>
+            <button id="reveal" class="btn btn-secondary">Reveal identity</button>
+          </div>
+          <div id="lc-status" class="muted" style="margin-top:8px"></div>
+        </aside>
+      </div>
+
+      <div id="match-modal" class="modal-backdrop">
+        <div class="modal">
+          <div class="modal-header">
+            <h3>New Match!</h3>
+            <button class="btn btn-ghost" id="close-modal">✕</button>
+          </div>
+          <div class="modal-body">
+            <div class="field">
+              <label>Allow messages from</label>
+              <div class="row" style="flex-wrap:wrap">
+                <label class="chip"><input type="checkbox" class="perm" value="team" checked /> Entire team</label>
+                <label class="chip"><input type="checkbox" class="perm" value="captains" /> Only captains</label>
+                <label class="chip"><input type="checkbox" class="perm" value="specific" /> Specific teammates</label>
+              </div>
+            </div>
+            <div class="row" style="justify-content:flex-end; margin-top:12px">
+              <button id="save-perms" class="btn btn-accent">Save</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script src="js/app.js"></script>
+    <script src="js/mock-data.js"></script>
+    <script>
+      const { $, $$, showToast, storage } = window.Homerun;
+      let queue = [...MockData.matches.queue];
+      function renderCards(){
+        const wrap = $('#cards');
+        wrap.innerHTML = '';
+        if (!queue.length){
+          $('#out-of-cards').style.display='block';
+          return;
+        }
+        $('#out-of-cards').style.display='none';
+        const top = queue[0];
+        const el = document.createElement('div');
+        el.className='card';
+        el.innerHTML = `
+          <div class="row" style="justify-content:space-between">
+            <div>
+              <h3>${top.name}</h3>
+              <div class="muted">${top.sport} • ${top.team}</div>
+              <div class="row" style="margin-top:6px; flex-wrap:wrap">${(top.tags||[]).map(t=>`<span class='chip'>${t}</span>`).join(' ')}</div>
+            </div>
+            <div class="avatar" style="width:56px;height:56px; border-radius:12px; background:#E2E8F0; display:grid; place-items:center; font-weight:700;">${top.name.split(' ').map(s=>s[0]).slice(0,2).join('')}</div>
+          </div>`;
+        wrap.appendChild(el);
+      }
+      function pass(){ if (queue.length){ queue.shift(); renderCards(); } }
+      function like(){ if (!queue.length) return; const m = queue.shift(); MockData.matches.matched.push({ ...m, at: new Date().toISOString() }); storage.set('matches', MockData.matches); renderCards(); openMatchModal(); }
+      function openMatchModal(){ $('#match-modal').classList.add('show'); $('.modal-backdrop').classList.add('show'); }
+      function closeMatchModal(){ $('#match-modal').classList.remove('show'); $('.modal-backdrop').classList.remove('show'); }
+      function savePerms(){ const perms = $$('.perm').filter(p=>p.checked).map(p=>p.value); storage.set('matchPerms', perms); showToast('Preferences saved'); closeMatchModal(); }
+      function initCrush(){
+        $('#anon-toggle').addEventListener('change', ()=>{
+          $('#anon-chip').style.display = $('#anon-toggle').checked ? 'inline-flex':'none';
+        });
+        $('#send-crush').addEventListener('click', ()=>{
+          const msg = ($('#lc-message').value||'').trim();
+          if (!msg) return;
+          const anon = $('#anon-toggle').checked;
+          $('#lc-status').textContent = anon ? 'Anonymous message delivered' : 'Message sent';
+          showToast('Locker Crush sent');
+        });
+        $('#reveal').addEventListener('click', ()=>{
+          $('#anon-toggle').checked = false; $('#anon-chip').style.display='none'; showToast('Identity revealed');
+        });
+      }
+      document.addEventListener('DOMContentLoaded', ()=>{
+        renderCards();
+        $('#pass').addEventListener('click', pass);
+        $('#like').addEventListener('click', like);
+        $('#info').addEventListener('click', ()=> showToast('Athlete info'));
+        $('#expand').addEventListener('click', (e)=>{ e.preventDefault(); queue = [...MockData.matches.queue, ...MockData.matches.queue]; renderCards(); });
+        $('#close-modal').addEventListener('click', closeMatchModal);
+        $('#save-perms').addEventListener('click', savePerms);
+        initCrush();
+      });
+    </script>
+  </body>
+</html>
+
+
