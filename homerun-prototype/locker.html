@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/styles.css" />
   </head>
   <body>
@@ -30,7 +31,10 @@
     <main class="container">
       <div class="section-header">
         <h1>Locker Room</h1>
-        <button id="edit-theme" class="btn btn-secondary">Edit Theme</button>
+        <div class="row">
+          <button id="edit-theme" class="btn btn-secondary">Edit Theme</button>
+          <button id="locker-settings" class="btn btn-secondary" title="Locker Settings"><i class="fa-solid fa-gear"></i></button>
+        </div>
       </div>
 
       <section class="card" id="locker-canvas" style="min-height:220px; padding:20px">
@@ -72,9 +76,9 @@
                   </svg>
                 </div>
                 <div class="actions">
-                  <button id="equip-none" class="btn btn-ghost">Unequip</button>
-                  <button id="reset-outfit" class="btn btn-secondary">Reset</button>
-                  <button id="save-outfit" class="btn btn-accent">Save Outfit</button>
+                  <button id="equip-none" class="btn btn-ghost" title="Clear all">Unequip</button>
+                  <button id="reset-outfit" class="btn btn-secondary" title="Default look">Reset</button>
+                  <button id="save-outfit" class="btn btn-accent" title="Ctrl+S">Save Outfit</button>
                 </div>
               </div>
               <div>
@@ -84,15 +88,15 @@
             </div>
             <div class="door left" id="door-left" title="Open/Close">
               <div class="panel">
-                <div class="shelf" id="shelf-left-top"><div class="title">Tops</div></div>
-                <div class="shelf" id="shelf-left-bottom"><div class="title">Bottoms</div></div>
+                <div class="shelf" id="shelf-left-top"><div class="title">Upper Shelf</div></div>
+                <div class="shelf" id="shelf-left-bottom"><div class="title">Lower Shelf</div></div>
               </div>
               <div class="handle"></div>
             </div>
             <div class="door right" id="door-right" title="Open/Close">
               <div class="panel">
-                <div class="shelf" id="shelf-right-shoes"><div class="title">Shoes</div></div>
-                <div class="shelf" id="shelf-right-acc"><div class="title">Accessories</div></div>
+                <div class="shelf" id="shelf-right-shoes"><div class="title">Side Shelf</div></div>
+                <div class="shelf" id="shelf-right-acc"><div class="title">Top Shelf</div></div>
               </div>
               <div class="handle"></div>
             </div>
@@ -120,8 +124,31 @@
       </div>
 
       <section class="card" style="margin-top:12px">
-        <div class="section-header"><h3>Schedule</h3><label class="chip">Public <input type="checkbox" id="schedule-privacy" checked/></label></div>
+        <div class="section-header">
+          <h3>Schedule</h3>
+          <div class="row">
+            <label class="chip">Public <input type="checkbox" id="schedule-privacy" checked/></label>
+            <button id="refresh-schedule" class="btn btn-ghost" title="Refresh Schedule"><i class="fa-solid fa-sync"></i></button>
+            <button id="toggle-stats" class="btn btn-ghost" title="Toggle Stats"><i class="fa-solid fa-chart-line"></i></button>
+          </div>
+        </div>
         <div id="schedule" class="list"></div>
+      </section>
+
+      <!-- Captain-only section -->
+      <section class="card captain-only" id="captain-controls" style="display:none; margin-top:12px">
+        <h3>Captain Controls</h3>
+        <div class="row">
+          <label class="col">
+            <span>Team Theme Override</span>
+            <input type="color" id="team-theme-override" class="input" />
+          </label>
+          <button id="apply-team-theme" class="btn btn-accent">Apply to Team</button>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <label class="chip"><input type="checkbox" id="locker-locked" /> Lock Locker for Maintenance</label>
+          <button id="broadcast-message" class="btn btn-primary">Broadcast Message</button>
+        </div>
       </section>
     </main>
 
@@ -145,10 +172,70 @@
       </div>
     </div>
 
+    <div id="locker-settings-modal" class="modal-backdrop">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>Locker Settings</h3>
+          <button class="btn btn-ghost" id="close-locker-settings">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="col">
+            <label class="row" style="justify-content:space-between">
+              <span>Locker Visibility</span>
+              <select id="locker-visibility" class="select">
+                <option value="public">Public</option>
+                <option value="teammates">Teammates Only</option>
+                <option value="private">Private</option>
+              </select>
+            </label>
+            <label class="row" style="justify-content:space-between; margin-top:8px">
+              <span>Show Statistics</span>
+              <label class="toggle"><input type="checkbox" id="show-stats" /><span class="slider"></span></label>
+            </label>
+            <label class="row" style="justify-content:space-between; margin-top:8px">
+              <span>Allow Custom Stickers</span>
+              <label class="toggle"><input type="checkbox" id="custom-stickers" checked /><span class="slider"></span></label>
+            </label>
+            <div class="row" style="justify-content:flex-end; margin-top:12px">
+              <button id="save-locker-settings" class="btn btn-accent">Save Settings</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="js/app.js"></script>
     <script src="js/mock-data.js"></script>
     <script>
-      const { $, $$, showToast, storage } = window.Homerun;
+      const { $, $$, showToast, storage, Undo, isCaptain, MockAPI } = window.Homerun;
+
+      async function fetchSchedule(){
+        const schedule = $('#schedule');
+        schedule.innerHTML = '<div class="loading">Loading schedule...</div>';
+
+        try {
+          const response = await MockAPI.fetch('/api/schedule');
+          if (!response.ok) throw new Error('Failed to fetch schedule');
+
+          const data = await response.json();
+          MockData.lockerProfile.schedule = data;
+          storage.set('lockerProfile', MockData.lockerProfile);
+
+          schedule.innerHTML = (data||[]).map(r=>`<div class='row'><span class='chip'>${r.day}</span><span>${r.what}</span><span class='muted'>${r.when}</span></div>`).join('');
+          showToast('Schedule synced');
+        } catch (error) {
+          console.error('API Error:', error);
+          schedule.innerHTML = '<div class="error">Failed to load schedule</div>';
+          showToast('Failed to sync schedule - using cached data');
+
+          // Fallback to cached data
+          const p = MockData.lockerProfile;
+          if (p.schedule) {
+            schedule.innerHTML = (p.schedule||[]).map(r=>`<div class='row'><span class='chip'>${r.day}</span><span>${r.what}</span><span class='muted'>${r.when}</span></div>`).join('');
+          }
+        }
+      }
+
       function render(){
         const p = MockData.lockerProfile;
         const canvas = $('#locker-canvas');
@@ -162,7 +249,13 @@
           const ph = document.createElement('div'); ph.style.background='#E2E8F0'; ph.style.borderRadius='12px'; ph.style.height='100px'; ph.style.display='grid'; ph.style.placeItems='center'; ph.textContent = src.split('/').pop(); photos.appendChild(ph);
         });
         const facts = $('#facts'); facts.innerHTML = (p.funFacts||[]).map(f=>`<li>${f}</li>`).join('');
-        const schedule = $('#schedule'); schedule.innerHTML = (p.schedule||[]).map(r=>`<div class='row'><span class='chip'>${r.day}</span><span>${r.what}</span><span class='muted'>${r.when}</span></div>`).join('');
+        const schedule = $('#schedule');
+        if (!p.schedule || !p.schedule._fetched) {
+          schedule.innerHTML = '<div class="loading">Loading schedule...</div>';
+          fetchSchedule();
+        } else {
+          schedule.innerHTML = (p.schedule||[]).map(r=>`<div class='row'><span class='chip'>${r.day}</span><span>${r.what}</span><span class='muted'>${r.when}</span></div>`).join('');
+        }
         $('#schedule-privacy').checked = (p.privacy?.schedule||'teammates')==='public';
         renderAvatar();
       }
@@ -172,10 +265,84 @@
         const bot = o.bottom ? MockData.clothingCatalog.bottoms.find(x=>x.id===o.bottom) : null;
         const sh = o.shoes ? MockData.clothingCatalog.shoes.find(x=>x.id===o.shoes) : null;
         const acc = o.accessory ? MockData.clothingCatalog.accessories.find(x=>x.id===o.accessory) : null;
-        const svgTop = document.getElementById('svg-top').firstElementChild; if (svgTop && top) svgTop.setAttribute('fill', top.color || '#011F5B'); else if (svgTop) svgTop.setAttribute('fill', '#011F5B');
-        const svgBot = document.getElementById('svg-bottom').firstElementChild; if (svgBot && bot) svgBot.setAttribute('fill', bot.color || '#6B7280'); else if (svgBot) svgBot.setAttribute('fill', '#6B7280');
-        const shoes = document.getElementById('svg-shoes').querySelectorAll('rect'); shoes.forEach(r=> r.setAttribute('fill', sh?.color || '#2AD3B3'));
-        const svgAcc = document.getElementById('svg-acc'); svgAcc.innerHTML = acc ? `<circle cx='96' cy='54' r='4' fill='${acc.color||'#FBBF24'}' />` : '';
+
+        // Handle tops - make color changes very visible
+        const svgTop = document.getElementById('svg-top').firstElementChild;
+        if (top) {
+          if (top.type === 'photo') {
+            // For photo items, show a distinct pattern
+            svgTop.setAttribute('fill', `url(#pattern-${top.id})`);
+            // Add pattern definition if it doesn't exist
+            let pattern = document.getElementById(`pattern-${top.id}`);
+            if (!pattern) {
+              const defs = document.querySelector('defs');
+              pattern = document.createElementNS('http://www.w3.org/2000/svg', 'pattern');
+              pattern.id = `pattern-${top.id}`;
+              pattern.setAttribute('patternUnits', 'userSpaceOnUse');
+              pattern.setAttribute('width', '10');
+              pattern.setAttribute('height', '10');
+              const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+              rect.setAttribute('width', '10');
+              rect.setAttribute('height', '10');
+              rect.setAttribute('fill', '#011F5B');
+              const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+              circle.setAttribute('cx', '5');
+              circle.setAttribute('cy', '5');
+              circle.setAttribute('r', '2');
+              circle.setAttribute('fill', '#FFFFFF');
+              pattern.appendChild(rect);
+              pattern.appendChild(circle);
+              defs.appendChild(pattern);
+            }
+          } else {
+            svgTop.setAttribute('fill', top.color || '#011F5B');
+          }
+        } else {
+          svgTop.setAttribute('fill', '#011F5B');
+        }
+
+        // Handle bottoms - make color changes very visible
+        const svgBot = document.getElementById('svg-bottom').firstElementChild;
+        if (bot) {
+          if (bot.type === 'photo') {
+            svgBot.setAttribute('fill', `url(#pattern-${bot.id})`);
+            let pattern = document.getElementById(`pattern-${bot.id}`);
+            if (!pattern) {
+              const defs = document.querySelector('defs');
+              pattern = document.createElementNS('http://www.w3.org/2000/svg', 'pattern');
+              pattern.id = `pattern-${bot.id}`;
+              pattern.setAttribute('patternUnits', 'userSpaceOnUse');
+              pattern.setAttribute('width', '8');
+              pattern.setAttribute('height', '8');
+              const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+              rect.setAttribute('width', '8');
+              rect.setAttribute('height', '8');
+              rect.setAttribute('fill', '#6B7280');
+              const line1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+              line1.setAttribute('x1', '0');
+              line1.setAttribute('y1', '0');
+              line1.setAttribute('x2', '8');
+              line1.setAttribute('y2', '8');
+              line1.setAttribute('stroke', '#FFFFFF');
+              line1.setAttribute('stroke-width', '1');
+              pattern.appendChild(rect);
+              pattern.appendChild(line1);
+              defs.appendChild(pattern);
+            }
+          } else {
+            svgBot.setAttribute('fill', bot.color || '#6B7280');
+          }
+        } else {
+          svgBot.setAttribute('fill', '#6B7280');
+        }
+
+        // Handle shoes - make them very visible
+        const shoes = document.getElementById('svg-shoes').querySelectorAll('rect');
+        shoes.forEach(r=> r.setAttribute('fill', sh?.color || '#2AD3B3'));
+
+        // Handle accessories - make them prominent
+        const svgAcc = document.getElementById('svg-acc');
+        svgAcc.innerHTML = acc ? `<circle cx='96' cy='54' r='6' fill='${acc.color||'#FBBF24'}' stroke='#FFFFFF' stroke-width='1' />` : '';
       }
       function addPhoto(){ const p = MockData.lockerProfile; if ((p.photos||[]).length>=3){ showToast('Max 3 photos'); return; } p.photos.push('assets/img/track_0'+(p.photos.length+1)+'.jpg'); storage.set('lockerProfile', MockData.lockerProfile); render(); showToast('Photo added'); }
       function addFact(){ const val = ($('#new-fact').value||'').trim(); if(!val) return; MockData.lockerProfile.funFacts.push(val); storage.set('lockerProfile', MockData.lockerProfile); $('#new-fact').value=''; render(); }
@@ -184,30 +351,196 @@
       function closeTheme(){ $('#theme-modal').classList.remove('show'); $('.modal-backdrop').classList.remove('show'); }
       function saveTheme(){ const t=MockData.lockerProfile.theme; t.primary=$('#color-primary').value; t.secondary=$('#color-secondary').value; t.accent=$('#color-accent').value; storage.set('lockerProfile', MockData.lockerProfile); closeTheme(); render(); showToast('Theme saved'); }
       function preset(){ $('#color-primary').value='#011F5B'; $('#color-secondary').value='#990000'; $('#color-accent').value='#2AD3B3'; }
-      function toggleLocker(){ const l=$('#locker'); const open=l.classList.toggle('open'); $('#toggle-locker').textContent = open? 'Close Locker':'Open Locker'; }
-      function renderWardrobe(cat='tops'){
-        $$('.cat-rail .tab').forEach(t=> t.classList.toggle('active', t.dataset.cat===cat));
-        const catalog = MockData.clothingCatalog;
-        const inject = (el, arr, category) => {
-          el.innerHTML = '';
-          if (!arr || !arr.length){ el.innerHTML = `<div class='muted'>None</div>`; return; }
-          arr.forEach(it=>{
-            const chip = document.createElement('div'); chip.className='item'; chip.innerHTML = `<span>${it.emoji}</span><span>${it.name}</span>`;
-            chip.addEventListener('click', ()=> equip(category, it.id));
-            el.appendChild(chip);
-          });
-        };
-        inject($('#shelf-left-top'), catalog.tops, 'tops');
-        inject($('#shelf-left-bottom'), catalog.bottoms, 'bottoms');
-        inject($('#shelf-right-shoes'), catalog.shoes, 'shoes');
-        inject($('#shelf-right-acc'), catalog.accessories, 'accessories');
+      function toggleLocker(){
+        const l=$('#locker');
+        const wasOpen = l.classList.contains('open');
+        const nowOpen = l.classList.toggle('open');
+        $('#toggle-locker').textContent = nowOpen ? 'Close Locker':'Open Locker';
+
+        // Update wardrobe visibility when locker opens/closes
+        if (wasOpen !== nowOpen) {
+          renderWardrobe();
+        }
       }
-      function equip(cat, id){ const o = MockData.lockerProfile.avatar.outfit; if (cat==='tops') o.top=id; if (cat==='bottoms') o.bottom=id; if (cat==='shoes') o.shoes=id; if (cat==='accessories') o.accessory=id; renderAvatar(); }
-      function unequipAll(){ MockData.lockerProfile.avatar.outfit = { top:null, bottom:null, shoes:null, accessory:null }; renderAvatar(); }
+      function renderWardrobe(cat='tops'){
+        const isOpen = $('#locker').classList.contains('open');
+        $$('.cat-rail .tab').forEach(t=> t.classList.toggle('active', t.dataset.cat===cat));
+
+        // Only show clothing items inside when locker is open
+        const wardrobe = $('#wardrobe');
+        if (!isOpen) {
+          wardrobe.innerHTML = '';
+          return;
+        }
+
+        const catalog = MockData.clothingCatalog;
+        const currentCategory = catalog[cat] || [];
+
+        wardrobe.innerHTML = '';
+        if (!currentCategory || !currentCategory.length){
+          wardrobe.innerHTML = `<div class='muted'>No ${cat} available</div>`;
+          return;
+        }
+
+        currentCategory.forEach(it=>{
+          const chip = document.createElement('div'); chip.className='item';
+          if (it.type === 'photo') {
+            // Photo-based item with preview
+            chip.innerHTML = `
+              <div class="item-preview" style="background-image: url('${it.photo}'); background-size: cover; width: 32px; height: 32px; border-radius: 6px; border: 1px solid #e5e7eb;"></div>
+              <span>${it.name}</span>
+            `;
+          } else {
+            // Color-based item with swatch
+            chip.innerHTML = `
+              <div class="color-swatch" style="width: 20px; height: 20px; border-radius: 50%; background-color: ${it.color}; border: 1px solid #e5e7eb;"></div>
+              <span>${it.name}</span>
+            `;
+          }
+          chip.addEventListener('click', ()=> equip(cat, it.id));
+          wardrobe.appendChild(chip);
+        });
+      }
+      function equip(cat, id){
+        const isOpen = $('#locker').classList.contains('open');
+        if (!isOpen) {
+          showToast('Open the locker to customize clothing');
+          return;
+        }
+
+        const o = MockData.lockerProfile.avatar.outfit; const prev = { ...o };
+        if (cat==='tops') o.top=id; if (cat==='bottoms') o.bottom=id; if (cat==='shoes') o.shoes=id; if (cat==='accessories') o.accessory=id; renderAvatar();
+        Undo.push({ label:'Equipped item', undoLabel:'Item unequipped', redoLabel:'Item re-equipped',
+          undo:()=>{ MockData.lockerProfile.avatar.outfit = { ...prev }; renderAvatar(); },
+          redo:()=>{ equip(cat, id); }
+        });
+      }
+      function unequipAll(){
+        const isOpen = $('#locker').classList.contains('open');
+        if (!isOpen) {
+          showToast('Open the locker to manage outfits');
+          return;
+        }
+
+        const prev = { ...MockData.lockerProfile.avatar.outfit };
+        MockData.lockerProfile.avatar.outfit = { top:null, bottom:null, shoes:null, accessory:null }; renderAvatar();
+        Undo.push({ label:'Unequipped all', undoLabel:'Outfit restored', redoLabel:'Unequipped again',
+          undo:()=>{ MockData.lockerProfile.avatar.outfit = { ...prev }; renderAvatar(); },
+          redo:()=>{ MockData.lockerProfile.avatar.outfit = { top:null, bottom:null, shoes:null, accessory:null }; renderAvatar(); }
+        });
+      }
       function saveOutfit(){ storage.set('lockerProfile', MockData.lockerProfile); showToast('Outfit saved'); }
-      function resetOutfit(){ MockData.lockerProfile.avatar.outfit = { top:'top1', bottom:'bot1', shoes:'sh1', accessory:null }; saveOutfit(); renderAvatar(); }
-      document.addEventListener('DOMContentLoaded', ()=>{ render(); $('#add-photo').addEventListener('click', addPhoto); $('#add-fact').addEventListener('click', addFact); $('#schedule-privacy').addEventListener('change', toggleSchedulePrivacy); $('#edit-theme').addEventListener('click', openTheme); $('#close-theme').addEventListener('click', closeTheme); $('#save-theme').addEventListener('click', saveTheme); $('#preset-penn').addEventListener('click', preset); });
-      document.addEventListener('DOMContentLoaded', ()=>{ $('#toggle-locker').addEventListener('click', toggleLocker); $$('.cat-rail .tab').forEach(t=> t.addEventListener('click', ()=> renderWardrobe(t.dataset.cat))); renderWardrobe('tops'); $('#equip-none').addEventListener('click', unequipAll); $('#save-outfit').addEventListener('click', saveOutfit); $('#reset-outfit').addEventListener('click', resetOutfit); $('#door-left').addEventListener('click', toggleLocker); $('#door-right').addEventListener('click', toggleLocker); });
+      function resetOutfit(){
+        const isOpen = $('#locker').classList.contains('open');
+        if (!isOpen) {
+          showToast('Open the locker to manage outfits');
+          return;
+        }
+
+        const prev = { ...MockData.lockerProfile.avatar.outfit };
+        MockData.lockerProfile.avatar.outfit = { top:'top1', bottom:'bot1', shoes:'sh1', accessory:null }; saveOutfit(); renderAvatar();
+        Undo.push({ label:'Outfit reset', undoLabel:'Reset undone', redoLabel:'Reset reapplied',
+          undo:()=>{ MockData.lockerProfile.avatar.outfit = { ...prev }; renderAvatar(); },
+          redo:()=>{ MockData.lockerProfile.avatar.outfit = { top:'top1', bottom:'bot1', shoes:'sh1', accessory:null }; renderAvatar(); }
+        });
+      }
+      // Mode-specific rendering
+      function updateModeVisibility(){
+        const captainMode = isCaptain();
+        $('#captain-controls').style.display = captainMode ? 'block' : 'none';
+        // Update button visibility based on mode
+        $('#locker-settings').style.display = captainMode ? 'inline-flex' : 'none';
+        $('#broadcast-message').style.display = captainMode ? 'inline-flex' : 'none';
+      }
+
+      // Locker settings modal
+      function openLockerSettings(){
+        $('#locker-settings-modal').classList.add('show');
+        $('.modal-backdrop').classList.add('show');
+        // Load current settings
+        const p = MockData.lockerProfile;
+        $('#locker-visibility').value = p.privacy?.locker || 'teammates';
+        $('#show-stats').checked = p.settings?.showStats || false;
+        $('#custom-stickers').checked = p.settings?.customStickers !== false;
+      }
+      function closeLockerSettings(){
+        $('#locker-settings-modal').classList.remove('show');
+        $('.modal-backdrop').classList.remove('show');
+      }
+      function saveLockerSettings(){
+        const p = MockData.lockerProfile;
+        p.privacy = p.privacy || {};
+        p.settings = p.settings || {};
+        p.privacy.locker = $('#locker-visibility').value;
+        p.settings.showStats = $('#show-stats').checked;
+        p.settings.customStickers = $('#custom-stickers').checked;
+        storage.set('lockerProfile', MockData.lockerProfile);
+        closeLockerSettings();
+        render();
+        showToast('Locker settings saved');
+      }
+
+      // Stats toggle
+      function toggleStats(){
+        const p = MockData.lockerProfile;
+        p.settings = p.settings || {};
+        p.settings.showStats = !p.settings.showStats;
+        storage.set('lockerProfile', MockData.lockerProfile);
+        render();
+        showToast(p.settings.showStats ? 'Stats enabled' : 'Stats hidden');
+      }
+
+      // Captain features
+      function applyTeamTheme(){
+        const color = $('#team-theme-override').value;
+        if (!color) return;
+        // This would apply to team in a real app
+        showToast('Team theme applied (demo)');
+      }
+
+      function toggleLockerLock(){
+        const locked = $('#locker-locked').checked;
+        // In real app, this would lock the locker for maintenance
+        showToast(locked ? 'Locker locked for maintenance' : 'Locker unlocked');
+      }
+
+      function broadcastMessage(){
+        // In real app, this would open a message composer for team broadcast
+        showToast('Broadcast message (demo)');
+      }
+
+
+      document.addEventListener('DOMContentLoaded', ()=>{
+        render();
+        updateModeVisibility();
+        $('#add-photo').addEventListener('click', addPhoto);
+        $('#add-fact').addEventListener('click', addFact);
+        $('#schedule-privacy').addEventListener('change', toggleSchedulePrivacy);
+        $('#edit-theme').addEventListener('click', openTheme);
+        $('#close-theme').addEventListener('click', closeTheme);
+        $('#save-theme').addEventListener('click', saveTheme);
+        $('#preset-penn').addEventListener('click', preset);
+        $('#locker-settings').addEventListener('click', openLockerSettings);
+        $('#close-locker-settings').addEventListener('click', closeLockerSettings);
+        $('#save-locker-settings').addEventListener('click', saveLockerSettings);
+        $('#refresh-schedule').addEventListener('click', fetchSchedule);
+        $('#toggle-stats').addEventListener('click', toggleStats);
+        $('#apply-team-theme').addEventListener('click', applyTeamTheme);
+        $('#locker-locked').addEventListener('change', toggleLockerLock);
+        $('#broadcast-message').addEventListener('click', broadcastMessage);
+      });
+      document.addEventListener('DOMContentLoaded', ()=>{
+        $('#toggle-locker').addEventListener('click', toggleLocker);
+        $$('.cat-rail .tab').forEach(t=> t.addEventListener('click', ()=> renderWardrobe(t.dataset.cat)));
+        renderWardrobe('tops');
+        $('#equip-none').addEventListener('click', unequipAll);
+        $('#save-outfit').addEventListener('click', saveOutfit);
+        $('#reset-outfit').addEventListener('click', resetOutfit);
+        $('#door-left').addEventListener('click', toggleLocker);
+        $('#door-right').addEventListener('click', toggleLocker);
+        // Listen for role changes
+        document.addEventListener('role:changed', ()=>{ updateModeVisibility(); render(); });
+      });
     </script>
   </body>
   </html>

@@ -78,7 +78,7 @@
     <script src="js/app.js"></script>
     <script src="js/mock-data.js"></script>
     <script>
-      const { $, $$, showToast, formatTime, isCaptain, storage } = window.Homerun;
+      const { $, $$, showToast, formatTime, isCaptain, storage, Undo } = window.Homerun;
       let activeConvId = storage.ensure('activeConvId', 'c2');
 
       function initial() {
@@ -212,11 +212,18 @@
         const c = MockData.conversations.find(x=>x.id===activeConvId);
         if (!c) return;
         c.messages = c.messages || [];
-        c.messages.push({ from:'u1', text, at: new Date().toISOString() });
+        const msg = { from:'u1', text, at: new Date().toISOString() };
+        c.messages.push(msg);
         storage.set('conversations', MockData.conversations);
         input.value='';
         renderThread(c);
         renderList();
+        showToast('Message sent');
+        // Undo
+        Undo.push({ label:'Message sent', undoLabel:'Message unsent', redoLabel:'Message re-sent',
+          undo:()=>{ c.messages = (c.messages||[]).filter(m=>m!==msg); storage.set('conversations', MockData.conversations); renderThread(c); renderList(); },
+          redo:()=>{ c.messages.push(msg); storage.set('conversations', MockData.conversations); renderThread(c); renderList(); }
+        });
       }
 
       document.addEventListener('DOMContentLoaded', initial);

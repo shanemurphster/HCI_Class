@@ -47,6 +47,26 @@ Open `http://localhost:5500/`.
 - `index.html`, `events.html`, `reels.html`, `messages.html`, `locker.html`, `cupid.html`
 - `css/styles.css`
 - `js/app.js`, `js/mock-data.js`
+- `assets/clothing/` - Add custom clothing photos here (jersey_blue.png, uniform_red.png, etc.)
+
+## Locker Customization
+The locker room features extensive customization options:
+
+### Clothing Items
+- **Tops**: 11 color-based options (Penn Tees in 5 colors, Hoodies, Tank Tops, Jackets) + 2 photo-based custom items
+- **Bottoms**: 11 color-based options (Track Shorts in 4 colors, Sweats in 3 colors, Compression Shorts, Track Pants) + 2 photo-based custom items
+- **Shoes**: Spikes and Trainers in team colors
+- **Accessories**: Headbands, Sunglasses, Medals
+
+### Visual Features
+- Color swatches for color-based items
+- Photo previews for custom clothing items
+- Click feedback with scaling animation
+- Athlete/Captain mode differences
+- Theme customization with Penn colors
+
+### Adding Custom Photos
+Place your custom clothing photos in `assets/clothing/` and update the paths in `js/mock-data.js`. Supported formats: PNG, JPG, etc.
 
 No build step is required. Edit files and refresh the browser.
 

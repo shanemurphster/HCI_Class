@@ -57,9 +57,9 @@
           <h2 style="margin-bottom:8px">Swipe</h2>
           <div id="cards" class="col"></div>
           <div class="row" style="justify-content:center; gap:12px; margin-top:8px">
-            <button id="pass" class="btn">Pass</button>
-            <button id="info" class="btn btn-secondary">Info</button>
-            <button id="like" class="btn btn-accent">Like</button>
+            <button id="pass" class="btn" title="Left Arrow">Pass</button>
+            <button id="info" class="btn btn-secondary" title="I">Info</button>
+            <button id="like" class="btn btn-accent" title="Right Arrow">Like</button>
           </div>
           <div id="out-of-cards" class="empty" style="display:none">Out of cards. <a href="#" id="expand">Expand teams</a></div>
         </section>
@@ -75,7 +75,7 @@
             <span id="anon-chip" class="chip">Anonymous Tiger #143</span>
           </div>
           <div class="row" style="margin-top:8px">
-            <button id="send-crush" class="btn btn-primary">Send Crush</button>
+            <button id="send-crush" class="btn btn-primary" title="Adds undo for 5s">Send Crush</button>
             <button id="reveal" class="btn btn-secondary">Reveal identity</button>
           </div>
           <div id="lc-status" class="muted" style="margin-top:8px"></div>
@@ -108,7 +108,7 @@
     <script src="js/app.js"></script>
     <script src="js/mock-data.js"></script>
     <script>
-      const { $, $$, showToast, storage } = window.Homerun;
+      const { $, $$, showToast, storage, Undo, applyFeatureVisibility } = window.Homerun;
       let queue = [...MockData.matches.queue];
       function renderCards(){
         const wrap = $('#cards');
@@ -133,7 +133,13 @@
         wrap.appendChild(el);
       }
       function pass(){ if (queue.length){ queue.shift(); renderCards(); } }
-      function like(){ if (!queue.length) return; const m = queue.shift(); MockData.matches.matched.push({ ...m, at: new Date().toISOString() }); storage.set('matches', MockData.matches); renderCards(); openMatchModal(); }
+      function like(){ if (!queue.length) return; const m = queue.shift(); MockData.matches.matched.push({ ...m, at: new Date().toISOString() }); storage.set('matches', MockData.matches); renderCards(); openMatchModal();
+        // Undo for like
+        Undo.push({ label:'Liked match', undoLabel:'Like removed', redoLabel:'Like restored',
+          undo:()=>{ MockData.matches.matched = MockData.matches.matched.filter(x=>x.id!==m.id); queue.unshift(m); storage.set('matches', MockData.matches); renderCards(); },
+          redo:()=>{ const i = queue.findIndex(x=>x.id===m.id); if(i>-1) queue.splice(i,1); MockData.matches.matched.push({ ...m, at: new Date().toISOString() }); storage.set('matches', MockData.matches); renderCards(); }
+        });
+      }
       function openMatchModal(){ $('#match-modal').classList.add('show'); $('.modal-backdrop').classList.add('show'); }
       function closeMatchModal(){ $('#match-modal').classList.remove('show'); $('.modal-backdrop').classList.remove('show'); }
       function savePerms(){ const perms = $$('.perm').filter(p=>p.checked).map(p=>p.value); storage.set('matchPerms', perms); showToast('Preferences saved'); closeMatchModal(); }
@@ -147,6 +153,11 @@
           const anon = $('#anon-toggle').checked;
           $('#lc-status').textContent = anon ? 'Anonymous message delivered' : 'Message sent';
           showToast('Locker Crush sent');
+          const prev = $('#lc-status').textContent;
+          Undo.push({ label:'Crush sent', undoLabel:'Crush undone', redoLabel:'Crush re-sent',
+            undo:()=>{ $('#lc-status').textContent = 'Crush canceled'; },
+            redo:()=>{ $('#lc-status').textContent = prev; }
+          });
         });
         $('#reveal').addEventListener('click', ()=>{
           $('#anon-toggle').checked = false; $('#anon-chip').style.display='none'; showToast('Identity revealed');
@@ -161,6 +172,7 @@
         $('#close-modal').addEventListener('click', closeMatchModal);
         $('#save-perms').addEventListener('click', savePerms);
         initCrush();
+        applyFeatureVisibility();
       });
     </script>
   </body>

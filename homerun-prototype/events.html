@@ -42,6 +42,7 @@
           <select id="team-filter" class="select" style="min-width:200px">
             <option value="">All teams</option>
           </select>
+          <button id="refresh-events" class="btn btn-ghost" title="Refresh Events"><i class="fa-solid fa-sync"></i></button>
           <button id="new-event" class="btn btn-primary">New Event</button>
         </div>
       </div>
@@ -80,20 +81,42 @@
     <script src="js/app.js"></script>
     <script src="js/mock-data.js"></script>
     <script>
-      const { $, $$, formatTime, formatDate, showToast, isCaptain, storage } = window.Homerun;
+      const { $, $$, formatTime, formatDate, showToast, isCaptain, storage, MockAPI } = window.Homerun;
       function initFilters(){
         const sel = $('#team-filter');
         MockData.teams.forEach(t=>{ const o=document.createElement('option'); o.value=t.id; o.textContent=t.name; sel.appendChild(o); });
         $$('#scope button, #time button').forEach(b=> b.addEventListener('click', ()=>{ b.parentElement.querySelectorAll('button').forEach(x=>x.classList.remove('active')); b.classList.add('active'); render(); }));
         sel.addEventListener('change', render);
       }
+      let eventsData = [...MockData.events]; // Cache for filtering
+
+      async function fetchEvents(){
+        const wrap = $('#events-list');
+        wrap.innerHTML = '<div class="loading">Loading events...</div>';
+
+        try {
+          const response = await MockAPI.fetch('/api/events');
+          if (!response.ok) throw new Error('Failed to fetch events');
+
+          const data = await response.json();
+          eventsData = data;
+          showToast('Events updated');
+        } catch (error) {
+          console.error('API Error:', error);
+          showToast('Failed to load events - using cached data');
+          eventsData = [...MockData.events];
+        }
+
+        render();
+      }
+
       function filtered(){
         const scope = $('#scope .active').dataset.scope;
         const time = $('#time .active').dataset.time;
         const teamId = $('#team-filter').value;
         const now = new Date();
         const endWeek = new Date(now); endWeek.setDate(now.getDate()+7);
-        return MockData.events.filter(e=>{
+        return eventsData.filter(e=>{
           if (scope==='my' && e.visibility==='Campus') return true; // simple demo
           if (scope==='campus' && e.visibility==='Team-only') return false;
           if (teamId && e.hostTeam!==teamId) return false;
@@ -169,8 +192,10 @@
       function toggleAway(){
         const t = MockData.travel.find(x=>x.teamId==='t1'); if (!t) return; t.away = !t.away; storage.set('travel', MockData.travel); renderAway(); showToast('Away status '+(t.away?'enabled':'disabled'));
       }
-      document.addEventListener('DOMContentLoaded', ()=>{
-        initFilters(); render();
+      document.addEventListener('DOMContentLoaded', async ()=>{
+        initFilters();
+        await fetchEvents();
+        $('#refresh-events').addEventListener('click', fetchEvents);
         $('#new-event').addEventListener('click', ()=> showToast('Stub: New Event'));
         $('#close-event').addEventListener('click', closeDetail);
         $('#toggle-away').addEventListener('click', toggleAway);

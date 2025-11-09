@@ -86,22 +86,45 @@
 
   const clothingCatalog = storage.ensure('clothingCatalog', {
     tops: [
-      { id:'top1', name:'Penn Tee (Blue)', color:'#011F5B', emoji:'👕' },
-      { id:'top2', name:'Penn Tee (Red)', color:'#990000', emoji:'👕' },
-      { id:'top3', name:'Warmup Jacket', color:'#3F3F46', emoji:'🧥' }
+      { id:'top1', name:'Penn Tee (Blue)', color:'#011F5B', icon:'fa-solid fa-shirt', type:'color' },
+      { id:'top2', name:'Penn Tee (Red)', color:'#990000', icon:'fa-solid fa-shirt', type:'color' },
+      { id:'top3', name:'Penn Tee (White)', color:'#FFFFFF', icon:'fa-solid fa-shirt', type:'color' },
+      { id:'top4', name:'Penn Tee (Green)', color:'#2AD3B3', icon:'fa-solid fa-shirt', type:'color' },
+      { id:'top5', name:'Penn Tee (Black)', color:'#000000', icon:'fa-solid fa-shirt', type:'color' },
+      { id:'top6', name:'Warmup Jacket (Navy)', color:'#1e3a8a', icon:'fa-solid fa-jacket', type:'color' },
+      { id:'top7', name:'Warmup Jacket (Gray)', color:'#4b5563', icon:'fa-solid fa-jacket', type:'color' },
+      { id:'top8', name:'Penn Hoodie (Blue)', color:'#011F5B', icon:'fa-solid fa-hoodie', type:'color' },
+      { id:'top9', name:'Penn Hoodie (Red)', color:'#990000', icon:'fa-solid fa-hoodie', type:'color' },
+      { id:'top10', name:'Penn Tank Top (Blue)', color:'#011F5B', icon:'fa-solid fa-shirt', type:'color' },
+      { id:'top11', name:'Penn Tank Top (White)', color:'#FFFFFF', icon:'fa-solid fa-shirt', type:'color' },
+      // Photo-based items (you can replace with actual image paths)
+      { id:'top12', name:'Custom Jersey', icon:'fa-solid fa-image', type:'photo', photo:'assets/clothing/jersey_blue.png' },
+      { id:'top13', name:'Team Uniform', icon:'fa-solid fa-image', type:'photo', photo:'assets/clothing/uniform_red.png' }
     ],
     bottoms: [
-      { id:'bot1', name:'Track Shorts', color:'#0EA5E9', emoji:'🩳' },
-      { id:'bot2', name:'Sweats', color:'#6B7280', emoji:'🩳' }
+      { id:'bot1', name:'Track Shorts (Blue)', color:'#0EA5E9', icon:'fa-solid fa-shorts', type:'color' },
+      { id:'bot2', name:'Track Shorts (Black)', color:'#000000', icon:'fa-solid fa-shorts', type:'color' },
+      { id:'bot3', name:'Track Shorts (White)', color:'#FFFFFF', icon:'fa-solid fa-shorts', type:'color' },
+      { id:'bot4', name:'Track Shorts (Red)', color:'#dc2626', icon:'fa-solid fa-shorts', type:'color' },
+      { id:'bot5', name:'Sweats (Gray)', color:'#6B7280', icon:'fa-solid fa-shorts', type:'color' },
+      { id:'bot6', name:'Sweats (Black)', color:'#000000', icon:'fa-solid fa-shorts', type:'color' },
+      { id:'bot7', name:'Sweats (Navy)', color:'#1e3a8a', icon:'fa-solid fa-shorts', type:'color' },
+      { id:'bot8', name:'Compression Shorts (Black)', color:'#000000', icon:'fa-solid fa-shorts', type:'color' },
+      { id:'bot9', name:'Compression Shorts (Blue)', color:'#011F5B', icon:'fa-solid fa-shorts', type:'color' },
+      { id:'bot10', name:'Track Pants (Black)', color:'#000000', icon:'fa-solid fa-shorts', type:'color' },
+      { id:'bot11', name:'Track Pants (Navy)', color:'#1e3a8a', icon:'fa-solid fa-shorts', type:'color' },
+      // Photo-based items
+      { id:'bot12', name:'Custom Shorts', icon:'fa-solid fa-image', type:'photo', photo:'assets/clothing/shorts_custom.png' },
+      { id:'bot13', name:'Team Pants', icon:'fa-solid fa-image', type:'photo', photo:'assets/clothing/pants_team.png' }
     ],
     shoes: [
-      { id:'sh1', name:'Spikes', color:'#2AD3B3', emoji:'👟' },
-      { id:'sh2', name:'Trainers', color:'#10B981', emoji:'👟' }
+      { id:'sh1', name:'Spikes', color:'#2AD3B3', icon:'fa-solid fa-shoe-prints' },
+      { id:'sh2', name:'Trainers', color:'#10B981', icon:'fa-solid fa-shoe-prints' }
     ],
     accessories: [
-      { id:'acc1', name:'Headband', color:'#F59E0B', emoji:'🧢' },
-      { id:'acc2', name:'Sunglasses', color:'#111827', emoji:'🕶️' },
-      { id:'acc3', name:'Medal', color:'#FBBF24', emoji:'🏅' }
+      { id:'acc1', name:'Headband', color:'#F59E0B', icon:'fa-solid fa-hat-cowboy' },
+      { id:'acc2', name:'Sunglasses', color:'#111827', icon:'fa-solid fa-glasses' },
+      { id:'acc3', name:'Medal', color:'#FBBF24', icon:'fa-solid fa-medal' }
     ]
   });
 
