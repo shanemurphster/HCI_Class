@@ -1,4 +1,8 @@
 # Homerun Prototype — Local Run Guide
+Project: Homerun – Social Networking App for College Athletes
+ Team Members: Shane Murphy, Ishani, Bertrand
+ Mentor: Ximing
+ Meeting Date: 10/29
 
 This is a static HTML/CSS/JS prototype. You can open the files directly in a browser or serve them from a lightweight local web server.
 
@@ -78,3 +82,4 @@ No build step is required. Edit files and refresh the browser.
 
 ### Notes
 - Tested with modern browsers (Chrome/Edge/Firefox). If something looks off, try a different browser.
+
